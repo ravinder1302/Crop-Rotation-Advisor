@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Prediction | CropAI</title>
+    <link rel="icon" type="" href="favicon.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --neon-green: #00ff8c;
+            --dark-bg: #1a1f25;
+            --card-bg: #252D34;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: var(--dark-bg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .prediction-container {
+            width: min(900px, 100%);
+            margin: 40px auto;
+            padding: 40px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: var(--text-primary);
+            font-size: 32px;
+            margin: 0 0 10px 0;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .input-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            margin: 0 auto;
+            max-width: 800px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            color: var(--neon-green);
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input,
+        .input-group select {
+            height: 50px;
+            padding: 0 16px;
+            background: rgba(26, 31, 37, 0.95);
+            border: 1px solid rgba(0, 255, 140, 0.2);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:hover,
+        .input-group select:hover {
+            border-color: var(--neon-green);
+            background-color: rgba(0, 255, 140, 0.05);
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 0 2px rgba(0, 255, 140, 0.2);
+            outline: none;
+        }
+
+        .input-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .button-container {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .predict-btn {
+            background: var(--neon-green);
+            color: var(--dark-bg);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            min-width: 200px;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 140, 0.4);
+        }
+
+        .predict-btn i {
+            font-size: 16px;
+        }
+
+        @media (max-width: 950px) {
+            .prediction-container {
+                margin: 60px auto 20px;
+                padding: 30px 20px;
+            }
+
+            .input-section {
+                gap: 24px;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .header p {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-back {
+                top: 10px;
+                left: 10px;
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .prediction-container {
+                padding: 20px 15px;
+            }
+
+            .input-group label {
+                font-size: 12px;
+            }
+
+            .input-group input,
+            .input-group select {
+                height: 45px;
+                font-size: 14px;
+            }
+
+            .predict-btn {
+            width: 100%;
+                padding: 12px 20px;
+            }
+        }
+
+        .nav-back {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 16px;
+            background: rgba(26, 31, 37, 0.95);
+            border: 1px solid rgba(0, 255, 140, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-back:hover {
+            color: var(--neon-green);
+            background: rgba(0, 255, 140, 0.1);
+            transform: translateX(-5px);
+        }
+
+        .nav-back i {
+            font-size: 16px;
+        }
+
+        /* Enhanced select styling */
+        .input-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2300ff8c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        .input-group select:hover {
+            border-color: var(--neon-green);
+            background-color: rgba(0, 255, 140, 0.05);
+        }
+
+        .input-group select:focus {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 0 2px rgba(0, 255, 140, 0.2);
+            outline: none;
+        }
+
+        /* Style for select options */
+        .input-group select option {
+            background-color: var(--dark-bg);
+            color: var(--text-primary);
+            padding: 12px;
+        }
+
+        /* Add hover effect for select */
+        .input-group:hover label {
+            color: var(--neon-green);
+        }
+
+        /* Add transition effects */
+        .input-group select {
+            transition: all 0.3s ease;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .input-group select {
+                font-size: 14px;
+                padding-right: 35px;
+                background-position: right 10px center;
+            }
+        }
+
+        /* Update input and select styles */
+        .input-group input,
+        .input-group select {
+            height: 50px;
+            padding: 0 16px;
+            background: rgba(26, 31, 37, 0.95);
+            border: 1px solid rgba(0, 255, 140, 0.2);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        /* Specific select styling */
+        .input-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2300ff8c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        /* Hover and focus states */
+        .input-group input:hover,
+        .input-group select:hover {
+            border-color: var(--neon-green);
+            background-color: rgba(0, 255, 140, 0.05);
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 0 2px rgba(0, 255, 140, 0.2);
+            outline: none;
+        }
+
+        /* Style for select options */
+        .input-group select option {
+            background-color: var(--dark-bg);
+            color: var(--text-primary);
+            padding: 12px;
+        }
+
+        /* Number input specific styles */
+        .input-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .input-group input[type="number"]::-webkit-outer-spin-button,
+        .input-group input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Placeholder styling */
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .input-group input,
+            .input-group select {
+                font-size: 14px;
+            }
+
+            .input-group select {
+                padding-right: 35px;
+                background-position: right 10px center;
+            }
+        }
+
+        /* Add these specific styles for the new inputs */
+        input[type="number"] {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #19f08b;
+            box-shadow: 0 0 0 2px rgba(25, 240, 139, 0.2);
+        }
+
+        /* Add a style for the rupee symbol */
+        .form-group label::after {
+            content: " (₹)";
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <a href="dashboard.html" class="nav-back">
+        <i class="fas fa-arrow-left"></i>
+        Back to Dashboard
+    </a>
+
+    <div class="prediction-container">
+        <div class="header">
+            <h1>Crop Prediction</h1>
+            <p>Enter parameters for AI-powered crop recommendations</p>
+        </div>
+
+        <form id="predictionForm">
+            <div class="input-section">
+                <!-- N Value -->
+                <div class="input-group">
+                    <label>N Value</label>
+                    <input type="number" id="n" placeholder="Enter N value" required>
+                </div>
+
+                <!-- P Value -->
+                <div class="input-group">
+                    <label>P Value</label>
+                    <input type="number" id="p" placeholder="Enter P value" required>
+                </div>
+
+                <!-- K Value -->
+                <div class="input-group">
+                    <label>K Value</label>
+                    <input type="number" id="k" placeholder="Enter K value" required>
+                </div>
+
+                <!-- Temperature -->
+                <div class="input-group">
+                    <label>Temperature (°C)</label>
+                    <input type="number" id="temperature" step="0.01" placeholder="Enter temperature" required>
+                </div>
+
+                <!-- Humidity -->
+                <div class="input-group">
+                    <label>Humidity (%)</label>
+                    <input type="number" id="humidity" step="0.01" placeholder="Enter humidity" required>
+                </div>
+
+                <!-- pH Level -->
+                <div class="input-group">
+                    <label>pH Level</label>
+                    <input type="number" id="ph" step="0.01" placeholder="Enter pH level" required>
+                </div>
+
+                <!-- Rainfall -->
+                <div class="input-group">
+                    <label>Rainfall (mm)</label>
+                    <input type="number" id="rainfall" step="0.01" placeholder="Enter rainfall" required>
+                </div>
+
+                <!-- Previous Crop -->
+                <div class="input-group">
+                    <label>Previous Crop</label>
+                    <select id="previous_crop" required>
+                        <option value="">Select Previous Crop</option>
+                    </select>
+                </div>
+
+                <!-- Soil Type -->
+                <div class="input-group">
+                    <label>Soil Type</label>
+                    <select id="soil_type" required>
+                        <option value="">Select Soil Type</option>
+                        <option value="Black Soil">Black Soil</option>
+                        <option value="Red Soil">Red Soil</option>
+                        <option value="Sandy Soil">Sandy Soil</option>
+                        <option value="Loamy Soil">Loamy Soil</option>
+                    </select>
+                </div>
+
+                <!-- Water Requirement -->
+                <div class="input-group">
+                    <label>Water Requirement</label>
+                    <select id="water_requirement" required>
+                        <option value="">Select Water Requirement</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+
+                <!-- Investment per Acre -->
+                <div class="input-group">
+                    <label>Investment per Acre (₹)</label>
+                    <input type="number" id="investment_per_acre" placeholder="Enter investment amount" required>
+                </div>
+
+                <!-- Crop Duration -->
+                <div class="input-group">
+                    <label>Crop Duration</label>
+                    <select id="crop_duration" required>
+                        <option value="">Select Duration</option>
+                        <option value="Short (3-4 months)">Short (3-4 months)</option>
+                        <option value="Medium (5-7 months)">Medium (5-7 months)</option>
+                        <option value="Long (8-12 months)">Long (8-12 months)</option>
+                    </select>
+                </div>
+
+                <!-- Only add this new form group for previous crop profit -->
+                <div class="input-group">
+                    <label for="previousCropProfit">Previous Crop Profit per Acre (₹):</label>
+                    <input type="number" id="previousCropProfit" name="previousCropProfit" placeholder="Enter previous crop profit" required>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button type="button" onclick="predictCrop()" class="predict-btn">
+                    <i class="fas fa-seedling"></i>
+                    Generate Prediction
+                </button>
+            </div>
+        </form>
+
+        <!-- Results Section -->
+        <div id="results" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        // Prediction Function
+        async function predictCrop() {
+            const formData = {
+                n: parseFloat(document.getElementById('n').value),
+                p: parseFloat(document.getElementById('p').value),
+                k: parseFloat(document.getElementById('k').value),
+                temperature: parseFloat(document.getElementById('temperature').value),
+                humidity: parseFloat(document.getElementById('humidity').value),
+                ph: parseFloat(document.getElementById('ph').value),
+                rainfall: parseFloat(document.getElementById('rainfall').value),
+                previous_crop: document.getElementById('previous_crop').value,
+                soil_type: document.getElementById('soil_type').value,
+                water_requirement: document.getElementById('water_requirement').value,
+                investment_per_acre: parseFloat(document.getElementById('investment_per_acre').value),
+                crop_duration: document.getElementById('crop_duration').value,
+                previousCropProfit: document.getElementById('previousCropProfit').value
+            };
+
+            try {
+                const response = await fetch('/predict-crop', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResults(data.recommendations, data.matchCount);
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error making prediction');
+            }
+        }
+
+        // Display Results Function
+        function displayResults(recommendations, matchCount) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h1 style="color:white;" >Top Recommended Crops</h1>
+                <h2 style="color:white;" >Analysis based on ${matchCount} similar conditions from our database</h2>
+                ${recommendations.map((rec, index) => `
+                    <div class="recommendation" style="
+                        border: 1px solid #ccc; 
+                        padding: 20px; 
+                        margin: 15px 0; 
+                        border-radius: 8px; 
+                        background: ${index === 0 ? '#f0fff0' : 'white'};
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        
+                        <h4 style="margin: 0 0 15px 0; color: #2c5282; font-size: 1.2em;">
+                            ${index + 1}. ${rec.crop}
+                            ${index === 0 ? ' <span style="color: #4CAF50; font-size: 0.9em;">(Best Match)</span>' : ''}
+                        </h4>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="stat-box" style="background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                                <p style="margin: 0; color: #666;">Investment Required</p>
+                                <p style="margin: 5px 0; font-size: 1.1em; font-weight: bold;">
+                                    ₹${parseFloat(rec.averageInvestment).toLocaleString()}
+                                </p>
+                            </div>
+                            
+                            <div class="stat-box" style="background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                                <p style="margin: 0; color: #666;">Expected Profit</p>
+                                <p style="margin: 5px 0; font-size: 1.1em; font-weight: bold;">
+                                    ₹${parseFloat(rec.predictedProfit).toLocaleString()}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px; text-align: right; color: #666;">
+                            Based on ${rec.sampleCount} similar cases
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        // Load Previous Crops Function
+        async function loadPreviousCrops() {
+            try {
+                const response = await fetch('/get-previous-crops');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const selectElement = document.getElementById('previous_crop');
+                    selectElement.innerHTML = '<option value="">Select Previous Crop</option>';
+                    
+                    data.crops.forEach(crop => {
+                        if (crop && crop.trim()) {
+                            const option = document.createElement('option');
+                            option.value = crop;
+                            option.textContent = crop;
+                            selectElement.appendChild(option);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading crops:', error);
+            }
+        }
+
+        // Load crops when page loads
+        document.addEventListener('DOMContentLoaded', loadPreviousCrops);
+    </script>
+</body>
+</html>
