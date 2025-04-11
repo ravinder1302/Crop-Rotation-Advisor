@@ -86,7 +86,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/cropr')
 
 // Basic routes
     app.get('/', (req, res) => {
-        res.sendFile(path.join(__dirname, 'views', 'home.html'));
+        res.sendFile(path.join(__dirname,'index.html'));
     });
 
     app.get('/register.html', (req, res) => {
